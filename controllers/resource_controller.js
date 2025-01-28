@@ -1,4 +1,4 @@
-const { default: mongoose } = require('mongoose')
+const { default: mongoose, mongo } = require('mongoose')
 const DB = require('../config/db_config')
 
 const db = new DB()
@@ -47,5 +47,91 @@ exports.getEvent = async (eventId) => {
         if (conn) {
             conn.close()
         }
+    }
+}
+
+exports.getAllUsers = async () => {
+    try {
+        var conn = await db.connectToDB()
+
+        const collection = conn.collection('users')
+
+        const result = await collection.find().toArray()
+
+        console.log(result)
+
+        if (!result) {
+            const error = new Error('no users exist')
+            error.code = 404
+            throw error
+        }
+        return result
+    } catch (err) {
+        throw err
+    }
+    finally {
+        if (conn) {
+            conn.close()
+        }
+    }
+}
+
+exports.addEvent = async ({ eventName, description, eventDate, location, stat, organizer, speakers }) => {
+    try {
+        var conn = await db.connectToDB()
+
+        const collection = conn.collection('events')
+
+        const result = await collection.insertOne(
+            {
+                "event_name": eventName, "description": description,
+                "event_date": new Date(eventDate).toISOString(), "location": location,
+                "status": stat, "organizer": organizer, "speaker_list": speakers,
+                "created_at": new Date().toISOString(), "updated_at": new Date().toISOString()
+            })
+        return result
+    } catch (err) {
+        throw err
+    }
+    finally {
+        conn.close()
+    }
+}
+
+exports.deleteEvent = async (eventId) => {
+    try {
+        var conn = await db.connectToDB()
+
+        const collection = conn.collection('events')
+
+        const result = await collection.deleteOne({ _id: mongoose.Types.ObjectId.createFromHexString(eventId) })
+
+        return result
+    } catch (err) {
+        throw err
+    } finally {
+        conn.close()
+    }
+}
+
+exports.updateEvent = async (eventId, updateProps) => {
+    try {
+        for (let key in updateProps) {
+            if (updateProps[key] === undefined) {
+                delete updateProps[key]
+            }
+        }
+
+        var conn = await db.connectToDB()
+
+        const collection = conn.collection('events')
+
+        const result = await collection.updateOne(
+            { _id: mongoose.Types.ObjectId.createFromHexString(eventId) },
+            { $set: { ...updateProps, "updated_at": new Date().toISOString() } }
+        )
+        return result
+    } catch (err) {
+        throw err
     }
 }

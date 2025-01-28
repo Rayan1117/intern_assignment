@@ -10,6 +10,7 @@ const jwt = require('jsonwebtoken')
 
 exports.compareUser = async (email, password) => {
     let conn
+    
     try {
 
         conn = await db.connectToDB()
@@ -19,18 +20,22 @@ exports.compareUser = async (email, password) => {
         const result = await collection.findOne({ email: email })
 
         if (!result) {
-            throw "user not exist"
+            const error = new Error("user not exist")
+            error.code = 400
+            throw error
         }
         const isPasswordMatched = await bcrypt.compare(password, result.hashedPassword)
         if (!isPasswordMatched) {
-            throw "password incorrect"
+            const error = new Error("password incorrect")
+            error.code = 400
+            throw error
         }
 
         return result
 
     } catch (err) {
 
-        throw new Error(err)
+        throw err
 
     }finally {
         if (conn) {

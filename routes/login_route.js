@@ -21,7 +21,7 @@ route.post('/r0', async (req, res, next) => {
         return next()
     }
     catch (err) {
-        return res.status(500).json({ error: err.message });
+        return res.status(err.code || 500).json({ error: err.message });
     }
 }, (req, res) => {
     try {
@@ -31,7 +31,7 @@ route.post('/r0', async (req, res, next) => {
         }
         throw new Error("something went wrong", { cause: "error occured while generating json tokens" })
     } catch (err) {
-        return res.status(500).json({ error: err.message, cause: err.cause || undefined })
+        return res.status(err.code || 500).json({ error: err.message, cause: err.cause || undefined })
     }
 },
 )
