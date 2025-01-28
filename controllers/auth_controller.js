@@ -20,8 +20,8 @@ exports.compareUser = async (email, password) => {
         if (!result) {
             throw "user not exist"
         }
-
-        if (!bcrypt.compareSync(password, result.password)) {
+        const isPasswordMatched = await bcrypt.compare(password, result.hashedPassword)
+        if (!isPasswordMatched) {
             throw "password incorrect"
         }
 
@@ -66,16 +66,16 @@ exports.registerUser = async ({ email, password, name, age, role, next }) => {
 
         const id = require('uuid').v4()
         try {
-            const hashedPassword = bcrypt.hash(password, 10)
+            const hashedPassword =await bcrypt.hash(password, 10)
             await collection.insertOne({ id, name, role, age, email, hashedPassword })
             next()
         } catch (err) {
-            
+
             if (err.code === 11000) {
                 throw 'email already exists. Please use a different email';
             }
             throw err
-        }finally{
+        } finally {
             await conn.close()
         }
 
@@ -97,6 +97,22 @@ exports.jwtSign = (payload, req, res) => {
 
 exports.jwtVerify = (token, req, res, next) => {
     try {
+        const header = req.header['authentication']
+        let token
+        if (!header) {
+            throw new Error('no authentication header found').code = 400
+        }
+
+        if (!header.startsWith('Bearer')) {
+            throw new Error("it's not a bearer token").code = 400
+        }
+
+        token = header.split(' ')[1]
+
+        if (!token) {
+            throw Error('token not found').code = 400
+        }
+
         jwt.verify(token, process.env.SIGN_SECRET, { algorithms: "HS256", complete: true }, (err, payload) => {
             if (err) {
                 throw err
@@ -113,6 +129,9 @@ exports.jwtVerify = (token, req, res, next) => {
             next()
         })
     } catch (err) {
-        return res.status(500).json({ error: err.message })
+        if (err.code !== 400) {
+            return res.status(500).json({ error: err.message })
+        }
+        return res.status(400).json({ error: err.message })
     }
 }

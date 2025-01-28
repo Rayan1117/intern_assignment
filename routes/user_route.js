@@ -19,4 +19,6 @@ route.get('/get_all_events', async(req , res)=>{
     }
 })
 
+route.get('/get_event')
+
 module.exports = route
