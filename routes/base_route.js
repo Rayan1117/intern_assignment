@@ -7,6 +7,10 @@ const loginRoute = require('./login_route')
 const registerRoute = require('./register_route')
 const { jwtVerify } = require('../controllers/auth_controller')
 
+route.get('/test', (req, res)=>{
+    return res.status(200).send('user route working perfectly')
+})
+
 baseRoute.use('/login', loginRoute)
 
 baseRoute.use('/register', registerRoute)

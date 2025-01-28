@@ -4,6 +4,10 @@ const route = express.Router()
 
 const authAccess = require('../controllers/auth_controller')
 
+route.get('/test', (req, res)=>{
+    return res.status(200).send('user route working perfectly')
+})
+
 route.post('/r0', async (req, res, next) => {
     try {
         const { email, password } = req.body
