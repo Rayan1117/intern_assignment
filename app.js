@@ -7,7 +7,7 @@ const PORT = process.env.PORT
 
 app.use(express.json())
 
-app.get('/test', (req, res)=>{
+app.get('/', (req, res)=>{
     res.status(200).send("entry route working properly")
 })
 
