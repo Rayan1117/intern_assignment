@@ -1,6 +1,6 @@
 const DB = require('../config/db_config')
 
-const bcrypt = require('bcrypt')
+const bcrypt = require('bcryptjs')
 
 const db = new DB()
 
