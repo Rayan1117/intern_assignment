@@ -13,6 +13,4 @@ app.get('/test', (req, res)=>{
 
 app.use('/r0', baseRoute)
 
-app.listen( PORT, ()=>{
-    console.log(`running at port ${PORT}`)
-})
+module.exports = app
