@@ -14,7 +14,7 @@ exports.getAllEvents = async () => {
 
         return result
     } catch (err) {
-        console.log(err)
+        throw err
     }
     finally {
         if (conn) {
@@ -57,8 +57,6 @@ exports.getAllUsers = async () => {
         const collection = conn.collection('users')
 
         const result = await collection.find().toArray()
-
-        console.log(result)
 
         if (!result) {
             const error = new Error('no users exist')
