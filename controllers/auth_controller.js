@@ -9,9 +9,10 @@ require('dotenv').config()
 const jwt = require('jsonwebtoken')
 
 exports.compareUser = async (email, password) => {
+    let conn
     try {
 
-        const conn = await db.connectToDB()
+        conn = await db.connectToDB()
 
         const collection = conn.collection('users')
 
@@ -31,6 +32,10 @@ exports.compareUser = async (email, password) => {
 
         throw new Error(err)
 
+    }finally {
+        if (conn) {
+            conn.close()
+        }
     }
 }
 
@@ -66,7 +71,7 @@ exports.registerUser = async ({ email, password, name, age, role, next }) => {
 
         const id = require('uuid').v4()
         try {
-            const hashedPassword =await bcrypt.hash(password, 10)
+            const hashedPassword = await bcrypt.hash(password, 10)
             await collection.insertOne({ id, name, role, age, email, hashedPassword })
             next()
         } catch (err) {
@@ -76,7 +81,7 @@ exports.registerUser = async ({ email, password, name, age, role, next }) => {
             }
             throw err
         } finally {
-            await conn.close()
+            conn.close()
         }
 
     } catch (err) {
@@ -95,43 +100,39 @@ exports.jwtSign = (payload, req, res) => {
     }
 }
 
-exports.jwtVerify = (token, req, res, next) => {
+exports.jwtVerify = (req, res, next) => {
     try {
-        const header = req.header['authentication']
+        const header = req.headers['authorization']
         let token
         if (!header) {
-            throw new Error('no authentication header found').code = 400
+            return res.status(400).json({ error: 'No authentication header found' });
         }
 
         if (!header.startsWith('Bearer')) {
-            throw new Error("it's not a bearer token").code = 400
+            return res.status(400).json({ error: "It's not a bearer token" });
         }
 
         token = header.split(' ')[1]
 
         if (!token) {
-            throw Error('token not found').code = 400
+            return res.status(400).json({ error: 'Token not found' });
         }
 
         jwt.verify(token, process.env.SIGN_SECRET, { algorithms: "HS256", complete: true }, (err, payload) => {
             if (err) {
-                throw err
+                return res.status(403).json({ error: err.message });
             }
 
             if (payload.payload.exp < Math.floor(Date.now()) / 1000) {
                 return res.status(403).json({ error: "token expired, not valid anymore" })
             }
-
             req.user = {
-                id: payload.id,
-                role: payload.role
+                id: payload.payload.id,
+                role: payload.payload.role
             }
             next()
         })
     } catch (err) {
-        if (err.code !== 400) {
-            return res.status(500).json({ error: err.message })
-        }
-        return res.status(400).json({ error: err.message })
+        return res.status(500).json({ error: err.message })
     }
 }

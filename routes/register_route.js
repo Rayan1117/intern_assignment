@@ -13,7 +13,7 @@ route.post("/r0", async (req, res, next) => {
         await registerUser({ email: email, password: password, name: name, age: age, role: role, next: next })
 
     } catch (err) {
-        if(err.code === 500){
+        if(err.code === 501){
             return res.status(500).json({error: err.message})
         }
         return res.status(400).json({error: err.message})

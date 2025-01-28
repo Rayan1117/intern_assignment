@@ -15,7 +15,7 @@ baseRoute.use('/role', (req, res, next) => {
     try {
         jwtVerify(req, res, next)
     } catch (err) {
-        return res.status().json({ error: err })
+        return res.status(500).json({ error: err })
     }
 })
 
@@ -33,8 +33,9 @@ baseRoute.use('/role/admin', (req, res, next) => {
 
 baseRoute.use('/role/user', (req, res, next) => {
     try {
-        if (req.user.role !== "user") {
-            throw "no other than admin can access this route"
+        console.log(req.user.role)
+        if (req.user.role !== "user" && req.user.role !=="admin") {
+            throw "no other than registered users can access this route"
         }
         next()
     }
